@@ -1,10 +1,16 @@
+"""
+crud.py — операции для взаимодействия с таблицами User и Event
+"""
+
 from sqlalchemy.orm import Session
 from backend.models import User, Event
 from datetime import datetime
 
+# Получить пользователя по Telegram ID
 def get_user(db: Session, telegram_id: int):
     return db.query(User).filter(User.telegram_id == telegram_id).first()
 
+# Создать пользователя
 def create_user(db: Session, telegram_id: int, username: str, phone: str = None):
     user = User(telegram_id=telegram_id, username=username, phone=phone)
     db.add(user)
@@ -12,6 +18,7 @@ def create_user(db: Session, telegram_id: int, username: str, phone: str = None)
     db.refresh(user)
     return user
 
+# Создать событие
 def create_event(db: Session, user_id: int, title: str, description: str | None, time: datetime):
     event = Event(user_id=user_id, title=title, description=description, time=time)
     db.add(event)
@@ -19,5 +26,6 @@ def create_event(db: Session, user_id: int, title: str, description: str | None,
     db.refresh(event)
     return event
 
+# Получить события, у которых время <= текущего момента
 def get_upcoming_events(db: Session, now: datetime):
     return db.query(Event).filter(Event.time <= now).all()

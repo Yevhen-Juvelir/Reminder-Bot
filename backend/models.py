@@ -1,7 +1,12 @@
+"""
+models.py — ORM-модели User и Event
+"""
+
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import Base
 
+# Модель пользователя
 class User(Base):
     __tablename__ = "users"
 
@@ -12,9 +17,11 @@ class User(Base):
     phone = Column(String)
     is_admin = Column(Boolean, default=False)
 
+    # Один пользователь может иметь несколько событий
     events = relationship("Event", back_populates="user")
 
 
+# Модель события
 class Event(Base):
     __tablename__ = "events"
 
@@ -25,4 +32,5 @@ class Event(Base):
     image_url = Column(String)
     time = Column(DateTime, nullable=False)
 
+    # Обратная связь с пользователем
     user = relationship("User", back_populates="events")
