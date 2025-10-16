@@ -1,0 +1,28 @@
+
+# Telegram API
+python-telegram-bot==21.4
+
+# Планувальник завдань
+APScheduler==3.10.4
+
+# Робота з базою даних
+SQLAlchemy==2.0.35
+
+# Зручна робота з .env змінними
+python-dotenv==1.0.1
+
+# Асинхронна інтеграція для вже запущених подій (IDE / Jupyter)
+nest_asyncio==1.6.0
+
+# FastAPI / серверна частина (якщо є REST-ендпоінти)
+fastapi==0.115.0
+uvicorn==0.30.6
+
+# Для типів часу
+pytz==2024.1
+
+# Якщо потрібно надсилати HTTP-запити або завантаження з інтернету
+requests==2.32.3
+
+
+# Использование: "pip install -r requirements.txt"

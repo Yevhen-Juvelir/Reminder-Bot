@@ -1,3 +1,7 @@
+"""
+handlers_admin.py — обработка функций администратора
+"""
+
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from backend import database, models
@@ -5,7 +9,7 @@ import os
 
 ALLOWED_PHONE = os.getenv("ALLOWED_PHONE")
 
-# ----------------- ПОКАЗАТИ ВСІ ПОДІЇ -----------------
+# Показать все события
 async def show_all_events(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db = database.SessionLocal()
     query = update.callback_query
@@ -33,31 +37,22 @@ async def show_all_events(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if getattr(ev, "link", None):
             summary += f"🔗 [Відкрити посилання]({ev.link})\n"
 
-        keyboard = [
-            [InlineKeyboardButton(f"🗑 Видалити {ev.id}", callback_data=f"confirm_delete_{ev.id}")]
-        ]
+        keyboard = [[InlineKeyboardButton(f"🗑 Видалити {ev.id}", callback_data=f"confirm_delete_{ev.id}")]]
         markup = InlineKeyboardMarkup(keyboard)
 
-        # Відправляємо повідомлення
         if ev.image_url and os.path.exists(ev.image_url):
             try:
                 with open(ev.image_url, "rb") as img:
-                    await query.message.reply_photo(
-                        photo=img,
-                        caption=summary,
-                        parse_mode="Markdown",
-                        reply_markup=markup
-                    )
+                    await query.message.reply_photo(photo=img, caption=summary, parse_mode="Markdown", reply_markup=markup)
             except Exception as e:
-                print(f"⚠️ Помилка відображення фото: {e}")
+                print(f"Помилка фото: {e}")
                 await query.message.reply_text(summary, parse_mode="Markdown", reply_markup=markup)
         else:
             await query.message.reply_text(summary, parse_mode="Markdown", reply_markup=markup)
 
     db.close()
 
-
-# ----------------- ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ -----------------
+# Подтверждение удаления
 async def confirm_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -66,18 +61,14 @@ async def confirm_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [
             InlineKeyboardButton("✅ Так, видалити", callback_data=f"delete_{event_id}"),
-            InlineKeyboardButton("❌ Скасувати", callback_data="cancel_delete")
+            InlineKeyboardButton("❌ Скасувати", callback_data="cancel_delete"),
         ]
     ]
     markup = InlineKeyboardMarkup(keyboard)
 
-    await query.message.reply_text(
-        f"Ви впевнені, що хочете видалити подію #{event_id}?",
-        reply_markup=markup
-    )
+    await query.message.reply_text(f"Видалити подію #{event_id}?", reply_markup=markup)
 
-
-# ----------------- ВИДАЛЕННЯ ОДНІЄЇ ПОДІЇ -----------------
+# Удаление события
 async def delete_event(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db = database.SessionLocal()
     query = update.callback_query
@@ -87,26 +78,24 @@ async def delete_event(update: Update, context: ContextTypes.DEFAULT_TYPE):
     event = db.query(models.Event).filter(models.Event.id == event_id).first()
 
     if not event:
-        await query.message.reply_text("⚠️ Подію не знайдено.")
+        await query.message.reply_text("Подію не знайдено.")
         db.close()
         return
 
-    # 🧹 видаляємо фото, якщо є
     if event.image_url and os.path.exists(event.image_url):
         try:
             os.remove(event.image_url)
-            print(f"🗑 Видалено фото: {event.image_url}")
+            print(f"Видалено фото: {event.image_url}")
         except Exception as e:
-            print(f"⚠️ Не вдалося видалити фото {event.image_url}: {e}")
+            print(f"Не вдалося видалити фото: {e}")
 
     db.delete(event)
     db.commit()
     db.close()
 
-    await query.message.reply_text(f"🗑 Подію *{event.title}* успішно видалено!", parse_mode="Markdown")
+    await query.message.reply_text(f"Подію *{event.title}* видалено.", parse_mode="Markdown")
 
-
-# ----------------- СКАСУВАННЯ -----------------
+# Отмена удаления
 async def cancel_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()

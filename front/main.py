@@ -1,3 +1,7 @@
+"""
+main.py — точка входу для Telegram-бота
+"""
+
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, CallbackQueryHandler,
     ConversationHandler, MessageHandler, filters
@@ -13,22 +17,21 @@ from dotenv import load_dotenv
 import os
 import nest_asyncio
 
-# 🧩 1. Початкове налаштування
+# Включаем поддержку asyncio в уже запущенном цикле (для Jupyter или IDE)
 nest_asyncio.apply()
 load_dotenv()
+
 TOKEN = os.getenv("BOT_TOKEN")
 
-# 🗃️ Створення таблиць у базі (якщо їх ще немає)
+# Создание таблиц, если не существуют
 models.Base.metadata.create_all(bind=database.engine)
 
-
-# 🕓 Планувальник
+# Функция, запускаемая при старте приложения
 async def post_startup(app):
     start_scheduler()
-    print("🕓 Планувальник запущено")
+    print("Планувальник запущено")
 
-
-# 🤖 Ініціалізація Telegram застосунку
+# Создание и настройка приложения Telegram
 app = (
     ApplicationBuilder()
     .token(TOKEN)
@@ -36,11 +39,9 @@ app = (
     .build()
 )
 
-# ------------------------------------------
-# 🔹 Команда /start
+# Регистрация команд и хендлеров
 app.add_handler(CommandHandler("start", start))
 
-# 🔹 Послідовне створення події
 from front.handlers import TITLE, DESCRIPTION, LINK, PHOTO, TIME
 conv_handler = ConversationHandler(
     entry_points=[CallbackQueryHandler(start_create_event, pattern="create_event")],
@@ -56,16 +57,9 @@ conv_handler = ConversationHandler(
 app.add_handler(conv_handler)
 
 app.add_handler(CallbackQueryHandler(show_all_events, pattern="show_events"))
-
-# 🔹 Підтвердження видалення
 app.add_handler(CallbackQueryHandler(confirm_delete, pattern=r"confirm_delete_\d+"))
-
-# 🔹 Фінальне видалення
 app.add_handler(CallbackQueryHandler(delete_event, pattern=r"delete_\d+"))
-
-# 🔹 Скасування видалення
 app.add_handler(CallbackQueryHandler(cancel_delete, pattern="cancel_delete"))
 
-# ------------------------------------------
-print("🤖 Бота запущено")
+print("Бота запущено")
 app.run_polling()
